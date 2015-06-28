@@ -1,0 +1,26 @@
+{
+  "name": "mesh-particle-system",
+  "version": "0.1.0",
+  "description": "testing",
+  "main": "index.js",
+  "directories": {
+    "example": "example"
+  },
+  "keywords": [
+    "babylon",
+    "particles"
+  ],
+  "devDependencies": {
+    "beefy": "^2.1.2",
+    "browserify": "^8.1.3"
+  },
+  "scripts": {
+    "test": "beefy example/example.js:bundle.js 8080 --cwd example --live --open"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/andyhall/babylon-mesh-particles"
+  },
+  "author": "Andy Hall",
+  "license": "ISC"
+}
