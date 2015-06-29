@@ -425,18 +425,27 @@ function updateColorsArray(system) {
 
 function disposeMPS(system) {
   system.stop();
+  system.material.ambientTexture = null;
+  system.material.opacityTexture = null;
+  system.material.diffuseTexture = null;
   system.material.dispose();
   system.material = null;
+  system.mesh.geometry.dispose();
   system.mesh.dispose();
   system.mesh = null;
   system.texture = null;
+  system.curriedAnimate = null;
+  system.initParticle = null;
   system._scene = null;
   system._dummyParticle = null;
   system._color0 = null;
   system._color1 = null;
-  system._data.length = 0;
+  system._data = null;
   system._positions.length = 0;
   system._colors.length = 0;
+  system._positions = null;
+  system._colors = null;
+  system.parent = null;
   system._disposed = true;
 }
 
