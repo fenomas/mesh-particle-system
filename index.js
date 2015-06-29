@@ -149,6 +149,10 @@ MPS.prototype.setSizeRange = function setSizes(from, to) {
   this._size1 = to;
 };
 
+MPS.prototype.emit = function mpsEmit(count) {
+  if (this._disposed) throw new Error('Already disposed');
+  spawnParticles(this, count);
+};
 
 
 /*
@@ -261,7 +265,7 @@ MPS.prototype.animate = function animateSPS(dt) {
   if (dt > 0.1) dt = 0.1;
 
   // add/update/remove particles
-  spawnParticles(this, dt)
+  spawnParticles(this, this.rate * dt)
   updateAndRecycle(this, dt)
 
   // write new position/color data
@@ -272,9 +276,10 @@ MPS.prototype.animate = function animateSPS(dt) {
   this.mesh.subMeshes[0].indexCount = this._alive*6
 };
 
+
 var pipe = 0
-function spawnParticles(system, dt) {
-  pipe += system.rate * dt;
+function spawnParticles(system, count) {
+  pipe += count;
   var toAdd = Math.floor(pipe);
   pipe -= toAdd;
   var ct = system._alive + toAdd;
