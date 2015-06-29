@@ -54,6 +54,7 @@ function MeshParticleSystem(capacity, rate, texture, scene) {
   this.gravity = -1;
   this.disposeOnEmpty = false;
   this.stopOnEmpty = false;
+  this.parent = null;
 
   // internal
   this._scene = scene;
@@ -334,11 +335,16 @@ function updatePositionsData(system) {
   var data = system._data;
   var cam = system._scene.activeCamera;
 
+  // relocate to parent if needed
+  if (system.parent) {
+    system.mesh.position.copyFrom( system.parent.absolutePosition )
+  }
+  
   // prepare transform
-  var eye = cam.globalPosition;
-  var tgt = system.mesh.getAbsolutePosition();
   var mat = BABYLON.Matrix.Identity();
-  BABYLON.Matrix.LookAtLHToRef(eye, tgt, vec3.Up(), mat);
+  BABYLON.Matrix.LookAtLHToRef(cam.globalPosition,      // eye
+                               system.mesh.position,    // target
+                               vec3.Up(), mat);
   mat.m[12] = mat.m[13] = mat.m[14] = 0;
   mat.invert();
   var m = mat.m
