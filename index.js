@@ -66,6 +66,7 @@ function MeshParticleSystem(capacity, rate, texture, scene) {
   this._size1 = 1.0;
   this._positions = [];
   this._colors = [];
+  this._playing = false;
   this._disposed = false;
 
   // init mesh and vertex data
@@ -120,13 +121,17 @@ var MPS = MeshParticleSystem;
 
 
 MPS.prototype.start = function startMPS() {
+  if (this._playing) return;
   if (this._disposed) throw new Error('Already disposed');
   this._scene.registerBeforeRender( this.curriedAnimate );
-  recalculateBounds(this)
+  recalculateBounds(this);
+  this._playing = true;
 };
 
-MPS.prototype.stop = function endMPS() {
+MPS.prototype.stop = function stopMPS() {
+  if (!this._playing) return;
   this._scene.unregisterBeforeRender( this.curriedAnimate );
+  this._playing = false;
 };
 
 MPS.prototype.setAlphaRange = function setAlphas(from, to) {
@@ -151,7 +156,7 @@ MPS.prototype.setSizeRange = function setSizes(from, to) {
 };
 
 MPS.prototype.emit = function mpsEmit(count) {
-  if (this._disposed) throw new Error('Already disposed');
+  this.start();
   spawnParticles(this, count);
 };
 
