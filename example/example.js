@@ -43,6 +43,7 @@ function setupParticles(scene) {
   mps.setColorRange( col3.Red(), col3.Green() );
   mps.setSizeRange( 1, 0.5 );
   mps.mesh.position.y = 2;
+  // or: mps.parent = someOtherMesh
 
   mps.initParticle = function myInitParticle(pdata) {
     pdata.position.x = Math.random() * 2 - 1;
@@ -55,7 +56,7 @@ function setupParticles(scene) {
     pdata.age = 0;
     pdata.lifetime =   Math.random() * 2 + 1;
   }
-
+  
   mps.start();
   window.mps = mps;
   window.scene = scene

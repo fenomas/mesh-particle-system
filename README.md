@@ -44,6 +44,8 @@ mps.setSizeRange( 1, 0.5 );
 
 // move system around by accessing its mesh
 mps.mesh.position.y = 2;
+// or define a parent for particles to move with 
+mps.parent = someOtherMesh;
 
 // define a custom particle init function to set 
 mps.initParticle = function myInitParticle(pdata) {
@@ -54,7 +56,10 @@ mps.initParticle = function myInitParticle(pdata) {
   pdata.lifetime = Math.random() + 1;
 }
 
-// start/stop
+// other stuff
 mps.start();
 mps.stop();
+mps.dispose();
+mps.stopOnEmpty // default false
+mps.disposeOnEmpty // default false
 ```
