@@ -52,6 +52,7 @@ function MeshParticleSystem(capacity, rate, texture, scene) {
   this.material = new BABYLON.StandardMaterial("SPS-mat", scene);
   this.texture = texture;
   this.gravity = -1;
+  this.disposeOnEmpty = false;
 
   // internal
   this._scene = scene;
@@ -63,12 +64,15 @@ function MeshParticleSystem(capacity, rate, texture, scene) {
   this._updateColors = true;
   this._size0 = 1.0;
   this._size1 = 1.0;
+  this._positions = [];
+  this._colors = [];
+  this._disposed = false;
 
   // init mesh and vertex data
-  var positions = [];
+  var positions = this._positions;
+  var colors = this._colors;
   var indices = [];
   var uvs = [];
-  var colors = [];
   // quads : 2 triangles per particle
   for (var p = 0; p < capacity; p ++) {
     positions.push(0,0,0,  0,0,0,  0,0,0,  0,0,0);
@@ -88,10 +92,6 @@ function MeshParticleSystem(capacity, rate, texture, scene) {
   // init material
   this.mesh.material = this.material
   this.material.specularColor = col3.Black();
-
-  // more private vars
-  this._positions = positions;
-  this._colors = colors;
 
   // configurable functions
   this.initParticle = initParticle;
@@ -119,12 +119,13 @@ var MPS = MeshParticleSystem;
 */
 
 
-MPS.prototype.start = function startPS() {
+MPS.prototype.start = function startMPS() {
+  if (this._disposed) throw new Error('Already disposed');
   this._scene.registerBeforeRender( this.curriedAnimate );
   recalculateBounds(this)
 };
 
-MPS.prototype.stop = function endPS() {
+MPS.prototype.stop = function endMPS() {
   this._scene.unregisterBeforeRender( this.curriedAnimate );
 };
 
@@ -153,6 +154,11 @@ MPS.prototype.emit = function mpsEmit(count) {
   if (this._disposed) throw new Error('Already disposed');
   spawnParticles(this, count);
 };
+
+MPS.prototype.dispose = function mpsDispose() {
+  disposeMPS(this);
+};
+
 
 
 /*
@@ -274,6 +280,11 @@ MPS.prototype.animate = function animateSPS(dt) {
 
   // only draw active mesh positions
   this.mesh.subMeshes[0].indexCount = this._alive*6
+  
+  // possibly self-dispose if no active particles are left
+  if (this.disposeOnEmpty && (this._alive===0)) {
+    this.dispose()
+  }
 };
 
 
@@ -394,5 +405,27 @@ function updateColorsArray(system) {
 
   system.mesh.updateVerticesData(BABYLON.VertexBuffer.ColorKind, colors, false, false);
 }
+
+
+
+// dispose function
+
+function disposeMPS(system) {
+  system.stop();
+  system.material.dispose();
+  system.material = null;
+  system.mesh.dispose();
+  system.mesh = null;
+  system.texture = null;
+  system._scene = null;
+  system._dummyParticle = null;
+  system._color0 = null;
+  system._color1 = null;
+  system._data.length = 0;
+  system._positions.length = 0;
+  system._colors.length = 0;
+  system._disposed = true;
+}
+
 
 
