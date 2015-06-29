@@ -53,6 +53,7 @@ function MeshParticleSystem(capacity, rate, texture, scene) {
   this.texture = texture;
   this.gravity = -1;
   this.disposeOnEmpty = false;
+  this.stopOnEmpty = false;
 
   // internal
   this._scene = scene;
@@ -285,10 +286,11 @@ MPS.prototype.animate = function animateSPS(dt) {
 
   // only draw active mesh positions
   this.mesh.subMeshes[0].indexCount = this._alive*6
-  
+
   // possibly self-dispose if no active particles are left
-  if (this.disposeOnEmpty && (this._alive===0)) {
-    this.dispose()
+  if (this._alive === 0) {
+    if (this.disposeOnEmpty) this.dispose();
+    else if (this.stopOnEmpty) this.stop();
   }
 };
 
