@@ -70,6 +70,7 @@ function MeshParticleSystem(capacity, rate, texture, scene) {
   this._colors = [];
   this._playing = false;
   this._disposed = false;
+  this._lastPos = vec3.Zero();
 
   // init mesh and vertex data
   var positions = this._positions;
@@ -277,6 +278,9 @@ function removeParticle(sys, n) {
 MPS.prototype.animate = function animateSPS(dt) {
   if (dt > 0.1) dt = 0.1;
 
+  // adjust particles if mesh has moved
+  adjustParticlesForMovement(this)
+  
   // add/update/remove particles
   spawnParticles(this, this.rate * dt)
   updateAndRecycle(this, dt)
@@ -330,16 +334,36 @@ function updateAndRecycle(system, dt) {
 }
 
 
+// if mesh system has moved since last frame, adjust particles to compensate
+
+function adjustParticlesForMovement(system) {
+  // relocate to parent if needed
+  if (system.parent) {
+    system.mesh.position.copyFrom( system.parent.absolutePosition )
+  }
+  var dx = system.mesh.position.x - system._lastPos.x;
+  var dy = system.mesh.position.y - system._lastPos.y;
+  var dz = system.mesh.position.z - system._lastPos.z;
+  system._lastPos.copyFrom( system.mesh.position );
+  if (Math.abs(dx) + Math.abs(dy) + Math.abs(dz) < .001) return;
+  
+  console.log('adjusting', system._alive, 'particles')
+  var alive = system._alive;
+  var data = system._data;
+  for (var i=0; i<alive; i++) {
+    var di = i*9;
+    data[di]   -= dx;
+    data[di+1] -= dy;
+    data[di+2] -= dz;
+  }
+}
+
+
 function updatePositionsData(system) {
   var positions = system._positions;
   var data = system._data;
   var cam = system._scene.activeCamera;
 
-  // relocate to parent if needed
-  if (system.parent) {
-    system.mesh.position.copyFrom( system.parent.absolutePosition )
-  }
-  
   // prepare transform
   var mat = BABYLON.Matrix.Identity();
   BABYLON.Matrix.LookAtLHToRef(cam.globalPosition,      // eye
@@ -364,10 +388,10 @@ function updatePositionsData(system) {
 
       var vx = (pt===1 || pt===2) ? size : -size;
       var vy = (pt>1) ? size : -size;
-
+      
       // following is unrolled version of Vector3.TransformCoordinatesToRef
       // minus the bits zeroed out due to having no z coord
-
+      
       var w = (vx * m[3]) + (vy * m[7]) + m[15];
       positions[idx]   = data[di]   + (vx * m[0] + vy * m[4])/w;
       positions[idx+1] = data[di+1] + (vx * m[1] + vy * m[5])/w;
