@@ -214,28 +214,26 @@ function recalculateBounds(system) {
   // toooootal hack.
   var reps = 30;
   var p = system._dummyParticle;
-  system.initParticle(p);
   var t = 0,
       s = 0,
-      max = p.velocity.clone(),
-      min = p.velocity.clone();
+      min = new vec3( Infinity, Infinity, Infinity ),
+      max = new vec3(-Infinity,-Infinity,-Infinity );
+  var halfg = system.gravity / 2;
   for (var i=0; i<reps; ++i) {
     system.initParticle(p);
-    var v = p.velocity;
-    max.x = Math.max( max.x, v.x );
-    max.y = Math.max( max.y, v.y );
-    max.z = Math.max( max.z, v.z );
-    min.x = Math.min( min.x, v.x );
-    min.y = Math.min( min.y, v.y );
-    min.z = Math.min( min.z, v.z );
-    t = Math.max( t, p.lifetime );
+    // x1 = x0 + v*t + 1/2*a*t^2
+    var t = p.lifetime;
+    var x = p.position.x + t*p.velocity.x;
+    var y = p.position.y + t*p.velocity.y + t*t*halfg;
+    var z = p.position.z + t*p.velocity.z;
+    max.x = Math.max( max.x, x );
+    max.y = Math.max( max.y, y );
+    max.z = Math.max( max.z, z );
+    min.x = Math.min( min.x, x );
+    min.y = Math.min( min.y, y );
+    min.z = Math.min( min.z, z );
     s = Math.max( s, p.size );
   }
-  // dist = v*t + 1/2*a*t^2
-  min.scaleInPlace(t);
-  max.scaleInPlace(t);
-  max.y = Math.max( max.y, max.y + system.gravity*t*t/2 );
-  min.y = Math.min( min.y, min.y + system.gravity*t*t/2 );
   min.subtractFromFloatsToRef( s,  s,  s, min);
   max.subtractFromFloatsToRef(-s, -s, -s, max);  // no addFromFloats, for some reason
   system.mesh._boundingInfo = new BABYLON.BoundingInfo(min, max);
