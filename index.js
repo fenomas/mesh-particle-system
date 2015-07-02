@@ -71,6 +71,7 @@ function MeshParticleSystem(capacity, rate, texture, scene) {
   this._playing = false;
   this._disposed = false;
   this._lastPos = vec3.Zero();
+  this._startingThisFrame = false;
 
   // init mesh and vertex data
   var positions = this._positions;
@@ -129,6 +130,7 @@ MPS.prototype.start = function startMPS() {
   this._scene.registerBeforeRender( this.curriedAnimate );
   recalculateBounds(this);
   this._playing = true;
+  this._startingThisFrame = true;
 };
 
 MPS.prototype.stop = function stopMPS() {
@@ -339,15 +341,20 @@ function updateAndRecycle(system, dt) {
 function adjustParticlesForMovement(system) {
   // relocate to parent if needed
   if (system.parent) {
-    system.mesh.position.copyFrom( system.parent.absolutePosition )
+    var p = system.parent.absolutePosition;
+    if (system._startingThisFrame) {
+      // bug workaround: on first frame parent may be newly created
+      p = system.parent.getAbsolutePosition();
+      system._startingThisFrame = false;
+    }
+    system.mesh.position.copyFrom(p)
   }
   var dx = system.mesh.position.x - system._lastPos.x;
   var dy = system.mesh.position.y - system._lastPos.y;
   var dz = system.mesh.position.z - system._lastPos.z;
   system._lastPos.copyFrom( system.mesh.position );
   if (Math.abs(dx) + Math.abs(dy) + Math.abs(dz) < .001) return;
-  
-  console.log('adjusting', system._alive, 'particles')
+    
   var alive = system._alive;
   var data = system._data;
   for (var i=0; i<alive; i++) {
