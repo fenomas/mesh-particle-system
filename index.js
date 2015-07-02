@@ -292,8 +292,8 @@ MPS.prototype.animate = function animateSPS(dt) {
   // only draw active mesh positions
   this.mesh.subMeshes[0].indexCount = this._alive*6
 
-  // possibly self-dispose if no active particles are left
-  if (this._alive === 0) {
+  // possibly stop/dispose if no rate and no living particles
+  if (this._alive===0 && this.rate===0) {
     if (this.disposeOnEmpty) this.dispose();
     else if (this.stopOnEmpty) this.stop();
   }
