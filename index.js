@@ -72,6 +72,7 @@ function MeshParticleSystem(capacity, rate, texture, scene) {
   this._disposed = false;
   this._lastPos = vec3.Zero();
   this._startingThisFrame = false;
+  this._toEmit = 0;
 
   // init mesh and vertex data
   var positions = this._positions;
@@ -162,7 +163,7 @@ MPS.prototype.setSizeRange = function setSizes(from, to) {
 
 MPS.prototype.emit = function mpsEmit(count) {
   this.start();
-  spawnParticles(this, count);
+  this._toEmit += count;
 };
 
 MPS.prototype.dispose = function mpsDispose() {
@@ -302,11 +303,10 @@ MPS.prototype.animate = function animateSPS(dt) {
 };
 
 
-var pipe = 0
 function spawnParticles(system, count) {
-  pipe += count;
-  var toAdd = Math.floor(pipe);
-  pipe -= toAdd;
+  system._toEmit += count;
+  var toAdd = Math.floor(system._toEmit);
+  system._toEmit -= toAdd;
   var ct = system._alive + toAdd;
   if (ct > system.capacity) ct = system.capacity;
   while (system._alive < ct) {
