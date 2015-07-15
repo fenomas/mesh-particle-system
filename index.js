@@ -224,23 +224,25 @@ function recalculateBounds(system) {
   var halfg = system.gravity / 2;
   for (var i=0; i<reps; ++i) {
     system.initParticle(p);
+    updateMinMax(min, max, p.position.x, p.position.y, p.position.z)
     // x1 = x0 + v*t + 1/2*a*t^2
     var t = p.lifetime;
     var x = p.position.x + t*p.velocity.x;
     var y = p.position.y + t*p.velocity.y + t*t*halfg;
     var z = p.position.z + t*p.velocity.z;
-    max.x = Math.max( max.x, x );
-    max.y = Math.max( max.y, y );
-    max.z = Math.max( max.z, z );
-    min.x = Math.min( min.x, x );
-    min.y = Math.min( min.y, y );
-    min.z = Math.min( min.z, z );
+    updateMinMax(min, max, x, y, z)
     s = Math.max( s, p.size );
   }
   min.subtractFromFloatsToRef( s,  s,  s, min);
   max.subtractFromFloatsToRef(-s, -s, -s, max);  // no addFromFloats, for some reason
   system.mesh._boundingInfo = new BABYLON.BoundingInfo(min, max);
 }
+function updateMinMax(min, max, x, y, z) {
+  if (x<min.x) min.x = x; else if (x>max.x) max.x = x;
+  if (y<min.y) min.y = y; else if (y>max.y) max.y = y;
+  if (z<min.z) min.z = z; else if (z>max.z) max.z = z;
+}
+
 
 
 function addNewParticle(sys) {
