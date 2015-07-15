@@ -1,4 +1,4 @@
-
+/* global BABYLON */
 
 module.exports = MeshParticleSystem;
 
@@ -98,6 +98,7 @@ function MeshParticleSystem(capacity, rate, texture, scene) {
   // init material
   this.mesh.material = this.material
   this.material.specularColor = col3.Black();
+//  this.material.checkReadyOnlyOnce = true;  // testing....
 
   // configurable functions
   this.initParticle = initParticle;
@@ -114,6 +115,9 @@ function MeshParticleSystem(capacity, rate, texture, scene) {
     self.animate(s);
     lastTime = t;
   }
+  
+  // debugging..
+  // this.mesh.showBoundingBox = true;
 }
 
 var MPS = MeshParticleSystem;
@@ -214,8 +218,7 @@ function recalculateBounds(system) {
   // toooootal hack.
   var reps = 30;
   var p = system._dummyParticle;
-  var t = 0,
-      s = 0,
+  var s = 0,
       min = new vec3( Infinity, Infinity, Infinity ),
       max = new vec3(-Infinity,-Infinity,-Infinity );
   var halfg = system.gravity / 2;
@@ -314,7 +317,6 @@ function spawnParticles(system, count) {
 
 function updateAndRecycle(system, dt) {
   // update particles and remove any that pass recycle check
-  var alive = system._alive
   var grav = system.gravity * dt
   var data = system._data
   for (var i=0; i<system._alive; ++i) {
@@ -379,7 +381,6 @@ function updatePositionsData(system) {
   var m = mat.m
 
   var alive = system._alive;
-  var quadDatArr = system._quadDatArr;
   var s0 = system._size0;
   var ds = system._size1 - s0;
 
