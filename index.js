@@ -55,6 +55,7 @@ function MeshParticleSystem(capacity, rate, texture, scene) {
   this.disposeOnEmpty = false;
   this.stopOnEmpty = false;
   this.parent = null;
+  this.onDispose = null;
 
   // internal
   this._scene = scene;
@@ -98,7 +99,7 @@ function MeshParticleSystem(capacity, rate, texture, scene) {
   // init material
   this.mesh.material = this.material
   this.material.specularColor = col3.Black();
-//  this.material.checkReadyOnlyOnce = true;  // testing....
+  this.material.checkReadyOnlyOnce = true;
 
   // configurable functions
   this.initParticle = initParticle;
@@ -171,6 +172,7 @@ MPS.prototype.emit = function mpsEmit(count) {
 };
 
 MPS.prototype.dispose = function mpsDispose() {
+  if (this.onDispose) this.onDispose()
   disposeMPS(this);
 };
 

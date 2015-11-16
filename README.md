@@ -60,6 +60,7 @@ mps.initParticle = function myInitParticle(pdata) {
 mps.start();
 mps.stop();
 mps.dispose();
+mps.onDispose; // default null
 mps.stopOnEmpty // default false
 mps.disposeOnEmpty // default false
 ```
