@@ -36,6 +36,7 @@ npm test
 // particle system settings
 mps.gravity = -5; // y direction only for now
 mps.rate = 50; // particles/second
+mps.friction = 0.99; // velocity *= friction each frame
 
 // define ranges that particles go through in their lifetime
 mps.setAlphaRange( 1, 0 );

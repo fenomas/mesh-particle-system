@@ -13,7 +13,7 @@ var col3 = BABYLON.Color3;
  *    particle data structure
 */
 
-function ParticleData () {
+function ParticleData() {
   this.position = vec3.Zero()
   this.velocity = vec3.Zero()
   this.size = 1.0
@@ -27,11 +27,11 @@ function ParticleData () {
 */
 
 function initParticle(pdata) {
-  pdata.position.copyFromFloats(0,0,0)
+  pdata.position.copyFromFloats(0, 0, 0)
   pdata.velocity.x = 5 * (Math.random() - 0.5);
   pdata.velocity.y = 5 * (Math.random() * 0.5) + 2;
   pdata.velocity.z = 5 * (Math.random() - 0.5);
-  pdata.size = 1*Math.random();
+  pdata.size = 1 * Math.random();
   pdata.age = 0;
   pdata.lifetime = 2;
 }
@@ -52,6 +52,7 @@ function MeshParticleSystem(capacity, rate, texture, scene) {
   this.material = new BABYLON.StandardMaterial("SPS-mat", scene);
   this.texture = texture;
   this.gravity = -1;
+  this.friction = 1;
   this.disposeOnEmpty = false;
   this.stopOnEmpty = false;
   this.parent = null;
@@ -60,7 +61,7 @@ function MeshParticleSystem(capacity, rate, texture, scene) {
   // internal
   this._scene = scene;
   this._alive = 0;
-  this._data = new Float32Array(capacity*9) // pos*3, vel*3, size, age, lifetime
+  this._data = new Float32Array(capacity * NUM_PARAMS) // pos*3, vel*3, size, age, lifetime
   this._dummyParticle = new ParticleData()
   this._color0 = new BABYLON.Color4(1.0, 1.0, 1.0, 1.0)
   this._color1 = new BABYLON.Color4(1.0, 1.0, 1.0, 1.0)
@@ -81,12 +82,12 @@ function MeshParticleSystem(capacity, rate, texture, scene) {
   var indices = [];
   var uvs = [];
   // quads : 2 triangles per particle
-  for (var p = 0; p < capacity; p ++) {
-    positions.push(0,0,0,  0,0,0,  0,0,0,  0,0,0);
-    indices.push(p*4, p*4+1, p*4+2);
-    indices.push(p*4, p*4+2, p*4+3);
-    uvs.push(0,1, 1,1, 1,0, 0,0);
-    colors.push( 1,0,1,1,  1,0,1,1,  1,0,1,1,  1,0,1,1 );
+  for (var p = 0; p < capacity; p++) {
+    positions.push(0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
+    indices.push(p * 4, p * 4 + 1, p * 4 + 2);
+    indices.push(p * 4, p * 4 + 2, p * 4 + 3);
+    uvs.push(0, 1, 1, 1, 1, 0, 0, 0);
+    colors.push(1, 0, 1, 1, 1, 0, 1, 1, 1, 0, 1, 1, 1, 0, 1, 1);
   }
   var vertexData = new BABYLON.VertexData();
   vertexData.positions = positions;
@@ -112,11 +113,11 @@ function MeshParticleSystem(capacity, rate, texture, scene) {
   var lastTime = performance.now();
   this.curriedAnimate = function curriedAnimate() {
     var t = performance.now();    // ms
-    var s = (t-lastTime) / 1000;  // sec
+    var s = (t - lastTime) / 1000;  // sec
     self.animate(s);
     lastTime = t;
   }
-  
+
   // debugging..
   // this.mesh.showBoundingBox = true;
 }
@@ -133,7 +134,7 @@ var MPS = MeshParticleSystem;
 MPS.prototype.start = function startMPS() {
   if (this._playing) return;
   if (this._disposed) throw new Error('Already disposed');
-  this._scene.registerBeforeRender( this.curriedAnimate );
+  this._scene.registerBeforeRender(this.curriedAnimate);
   recalculateBounds(this);
   this._playing = true;
   this._startingThisFrame = true;
@@ -141,7 +142,7 @@ MPS.prototype.start = function startMPS() {
 
 MPS.prototype.stop = function stopMPS() {
   if (!this._playing) return;
-  this._scene.unregisterBeforeRender( this.curriedAnimate );
+  this._scene.unregisterBeforeRender(this.curriedAnimate);
   this._playing = false;
 };
 
@@ -184,13 +185,15 @@ MPS.prototype.dispose = function mpsDispose() {
  *    
 */
 
+var NUM_PARAMS = 9    // stored floats per particle
+
 
 // set mesh/mat properties based on color/alpha parameters
 function updateColorSettings(sys) {
   var c0 = sys._color0;
   var c1 = sys._color1;
-  var doAlpha = !( equal(c0.a, 1) && equal(c0.a, c1.a) );
-  var doColor = !( equal(c0.r, c1.r) && equal(c0.g, c1.g) && equal(c0.b, c1.b) );
+  var doAlpha = !(equal(c0.a, 1) && equal(c0.a, c1.a));
+  var doColor = !(equal(c0.r, c1.r) && equal(c0.g, c1.g) && equal(c0.b, c1.b));
 
   sys.mesh.hasVertexAlpha = doAlpha;
   if (doColor || doAlpha) {
@@ -211,8 +214,8 @@ function updateColorSettings(sys) {
 
   sys._updateColors = doAlpha || doColor;
 }
-function equal(a,b) {
-  return (Math.abs(a-b) < 1e-5)
+function equal(a, b) {
+  return (Math.abs(a - b) < 1e-5)
 }
 
 
@@ -221,28 +224,28 @@ function recalculateBounds(system) {
   var reps = 30;
   var p = system._dummyParticle;
   var s = 0,
-      min = new vec3( Infinity, Infinity, Infinity ),
-      max = new vec3(-Infinity,-Infinity,-Infinity );
+    min = new vec3(Infinity, Infinity, Infinity),
+    max = new vec3(-Infinity, -Infinity, -Infinity);
   var halfg = system.gravity / 2;
-  for (var i=0; i<reps; ++i) {
+  for (var i = 0; i < reps; ++i) {
     system.initParticle(p);
     updateMinMax(min, max, p.position.x, p.position.y, p.position.z)
     // x1 = x0 + v*t + 1/2*a*t^2
     var t = p.lifetime;
-    var x = p.position.x + t*p.velocity.x;
-    var y = p.position.y + t*p.velocity.y + t*t*halfg;
-    var z = p.position.z + t*p.velocity.z;
+    var x = p.position.x + t * p.velocity.x;
+    var y = p.position.y + t * p.velocity.y + t * t * halfg;
+    var z = p.position.z + t * p.velocity.z;
     updateMinMax(min, max, x, y, z)
-    s = Math.max( s, p.size );
+    s = Math.max(s, p.size);
   }
-  min.subtractFromFloatsToRef( s,  s,  s, min);
+  min.subtractFromFloatsToRef(s, s, s, min);
   max.subtractFromFloatsToRef(-s, -s, -s, max);  // no addFromFloats, for some reason
   system.mesh._boundingInfo = new BABYLON.BoundingInfo(min, max);
 }
 function updateMinMax(min, max, x, y, z) {
-  if (x<min.x) min.x = x; else if (x>max.x) max.x = x;
-  if (y<min.y) min.y = y; else if (y>max.y) max.y = y;
-  if (z<min.z) min.z = z; else if (z>max.z) max.z = z;
+  if (x < min.x) min.x = x; else if (x > max.x) max.x = x;
+  if (y < min.y) min.y = y; else if (y > max.y) max.y = y;
+  if (z < min.z) min.z = z; else if (z > max.z) max.z = z;
 }
 
 
@@ -253,26 +256,26 @@ function addNewParticle(sys) {
   sys.initParticle(part)
   // copy particle data into internal Float32Array
   var data = sys._data
-  var ix = sys._alive * 9
-  data[ix]   = part.position.x
-  data[ix+1] = part.position.y
-  data[ix+2] = part.position.z
-  data[ix+3] = part.velocity.x
-  data[ix+4] = part.velocity.y
-  data[ix+5] = part.velocity.z
-  data[ix+6] = part.size
-  data[ix+7] = part.age
-  data[ix+8] = part.lifetime
+  var ix = sys._alive * NUM_PARAMS
+  data[ix] = part.position.x
+  data[ix + 1] = part.position.y
+  data[ix + 2] = part.position.z
+  data[ix + 3] = part.velocity.x
+  data[ix + 4] = part.velocity.y
+  data[ix + 5] = part.velocity.z
+  data[ix + 6] = part.size
+  data[ix + 7] = part.age
+  data[ix + 8] = part.lifetime
   sys._alive += 1
 }
 
 function removeParticle(sys, n) {
   // copy particle data from last live location to removed location
   var data = sys._data
-  var from = (sys._alive-1) * 9
-  var to = n * 9
-  for (var i=0; i<9; ++i) {
-    data[to+i] = data[from+i]
+  var from = (sys._alive - 1) * NUM_PARAMS
+  var to = n * NUM_PARAMS
+  for (var i = 0; i < NUM_PARAMS; ++i) {
+    data[to + i] = data[from + i]
   }
   sys._alive -= 1;
 }
@@ -288,7 +291,7 @@ MPS.prototype.animate = function animateSPS(dt) {
 
   // adjust particles if mesh has moved
   adjustParticlesForMovement(this)
-  
+
   // add/update/remove particles
   spawnParticles(this, this.rate * dt)
   updateAndRecycle(this, dt)
@@ -298,10 +301,10 @@ MPS.prototype.animate = function animateSPS(dt) {
   if (this._updateColors) updateColorsArray(this)
 
   // only draw active mesh positions
-  this.mesh.subMeshes[0].indexCount = this._alive*6
+  this.mesh.subMeshes[0].indexCount = this._alive * 6
 
   // possibly stop/dispose if no rate and no living particles
-  if (this._alive===0 && this.rate===0) {
+  if (this._alive === 0 && this.rate === 0) {
     if (this.disposeOnEmpty) this.dispose();
     else if (this.stopOnEmpty) this.stop();
   }
@@ -323,18 +326,22 @@ function updateAndRecycle(system, dt) {
   // update particles and remove any that pass recycle check
   var grav = system.gravity * dt
   var data = system._data
-  for (var i=0; i<system._alive; ++i) {
-    var ix = i * 9
-    data[ix+4] += grav                  // vel.y += g * dt
-    data[ix]   += data[ix+3] * dt
-    data[ix+1] += data[ix+4] * dt       // pos += vel * dt
-    data[ix+2] += data[ix+5] * dt
-    var t = data[ix+7] + dt             // t = age + dt
-    if (t > data[ix+8]) {               // if (t>lifetime)..
+  var fric = system.friction
+  for (var i = 0; i < system._alive; ++i) {
+    var ix = i * NUM_PARAMS
+    data[ix + 4] += grav                  // vel.y += g * dt
+    data[ix + 3] *= fric                  // vel *= friction*dt
+    data[ix + 4] *= fric
+    data[ix + 5] *= fric
+    data[ix] += data[ix + 3] * dt         // pos += vel * dt
+    data[ix + 1] += data[ix + 4] * dt
+    data[ix + 2] += data[ix + 5] * dt
+    var t = data[ix + 7] + dt             // t = age + dt
+    if (t > data[ix + 8]) {               // if (t>lifetime)..
       removeParticle(system, i)
       i--;
     } else {
-      data[ix+7] = t;                   // age = dt
+      data[ix + 7] = t;                   // age = dt
     }
   }
 }
@@ -356,16 +363,16 @@ function adjustParticlesForMovement(system) {
   var dx = system.mesh.position.x - system._lastPos.x;
   var dy = system.mesh.position.y - system._lastPos.y;
   var dz = system.mesh.position.z - system._lastPos.z;
-  system._lastPos.copyFrom( system.mesh.position );
+  system._lastPos.copyFrom(system.mesh.position);
   if (Math.abs(dx) + Math.abs(dy) + Math.abs(dz) < .001) return;
-    
+
   var alive = system._alive;
   var data = system._data;
-  for (var i=0; i<alive; i++) {
-    var di = i*9;
-    data[di]   -= dx;
-    data[di+1] -= dy;
-    data[di+2] -= dz;
+  for (var i = 0; i < alive; i++) {
+    var di = i * NUM_PARAMS;
+    data[di] -= dx;
+    data[di + 1] -= dy;
+    data[di + 2] -= dz;
   }
 }
 
@@ -378,8 +385,8 @@ function updatePositionsData(system) {
   // prepare transform
   var mat = BABYLON.Matrix.Identity();
   BABYLON.Matrix.LookAtLHToRef(cam.globalPosition,      // eye
-                               system.mesh.position,    // target
-                               vec3.Up(), mat);
+    system.mesh.position,    // target
+    vec3.Up(), mat);
   mat.m[12] = mat.m[13] = mat.m[14] = 0;
   mat.invert();
   var m = mat.m
@@ -388,24 +395,24 @@ function updatePositionsData(system) {
   var s0 = system._size0;
   var ds = system._size1 - s0;
 
-  for (var i=0; i<alive; i++) {
-    var di = i*9;
-    var scale = data[di+7] / data[di+8];
-    var size = data[di+6] * (s0 + ds*scale) / 2;
+  for (var i = 0; i < alive; i++) {
+    var di = i * NUM_PARAMS;
+    var scale = data[di + 7] / data[di + 8];
+    var size = data[di + 6] * (s0 + ds * scale) / 2;
 
-    var idx = i*12;
-    for (var pt=0; pt<4; pt++) {
+    var idx = i * 12;
+    for (var pt = 0; pt < 4; pt++) {
 
-      var vx = (pt===1 || pt===2) ? size : -size;
-      var vy = (pt>1) ? size : -size;
-      
+      var vx = (pt === 1 || pt === 2) ? size : -size;
+      var vy = (pt > 1) ? size : -size;
+
       // following is unrolled version of Vector3.TransformCoordinatesToRef
       // minus the bits zeroed out due to having no z coord
-      
+
       var w = (vx * m[3]) + (vy * m[7]) + m[15];
-      positions[idx]   = data[di]   + (vx * m[0] + vy * m[4])/w;
-      positions[idx+1] = data[di+1] + (vx * m[1] + vy * m[5])/w;
-      positions[idx+2] = data[di+2] + (vx * m[2] + vy * m[6])/w;
+      positions[idx] = data[di] + (vx * m[0] + vy * m[4]) / w;
+      positions[idx + 1] = data[di + 1] + (vx * m[1] + vy * m[5]) / w;
+      positions[idx + 2] = data[di + 2] + (vx * m[2] + vy * m[6]) / w;
 
       idx += 3;
     }
@@ -430,22 +437,22 @@ function updateColorsArray(system) {
   var db = system._color1.b - b0;
   var da = system._color1.a - a0;
 
-  for (var i=0; i<alive; i++) {
-    var di = i*9;
+  for (var i = 0; i < alive; i++) {
+    var di = i * NUM_PARAMS;
 
-    var scale = data[di+7] / data[di+8];
+    var scale = data[di + 7] / data[di + 8];
     // scale alpha from startAlpha to endAlpha by (age/lifespan)
     var r = r0 + dr * scale;
     var g = g0 + dg * scale;
     var b = b0 + db * scale;
     var a = a0 + da * scale;
 
-    var idx = i*16;
-    for (var pt=0; pt<4; pt++) {
-      colors[idx]   = r;
-      colors[idx+1] = g;
-      colors[idx+2] = b;
-      colors[idx+3] = a;
+    var idx = i * 16;
+    for (var pt = 0; pt < 4; pt++) {
+      colors[idx] = r;
+      colors[idx + 1] = g;
+      colors[idx + 2] = b;
+      colors[idx + 3] = a;
       idx += 4;
     }
   }
