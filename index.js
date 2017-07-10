@@ -53,6 +53,7 @@ function MeshParticleSystem(capacity, rate, texture, scene) {
   this.texture = texture;
   this.gravity = -1;
   this.friction = 1;
+  this.fps = 60;
   this.disposeOnEmpty = false;
   this.stopOnEmpty = false;
   this.parent = null;
@@ -110,12 +111,8 @@ function MeshParticleSystem(capacity, rate, texture, scene) {
 
   // curried animate function
   var self = this;
-  var lastTime = performance.now();
   this.curriedAnimate = function curriedAnimate() {
-    var t = performance.now();    // ms
-    var s = (t - lastTime) / 1000;  // sec
-    self.animate(s);
-    lastTime = t;
+    self.animate(1 / self.fps);
   }
 
   // debugging..
@@ -327,8 +324,8 @@ function updateAndRecycle(system, dt) {
   var grav = system.gravity * dt
   var data = system._data
   var fric = system.friction
+  var ix = 0
   for (var i = 0; i < system._alive; ++i) {
-    var ix = i * NUM_PARAMS
     data[ix + 4] += grav                  // vel.y += g * dt
     data[ix + 3] *= fric                  // vel *= friction*dt
     data[ix + 4] *= fric
@@ -342,6 +339,7 @@ function updateAndRecycle(system, dt) {
       i--;
     } else {
       data[ix + 7] = t;                   // age = dt
+      ix += NUM_PARAMS
     }
   }
 }
