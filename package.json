@@ -8,6 +8,7 @@
     "particles"
   ],
   "scripts": {
+    "build": "cd docs; webpack -p index.js bundle.js",
     "test": "cd docs; webpack-dev-server -d --inline index.js"
   },
   "repository": {
