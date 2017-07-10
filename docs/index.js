@@ -39,9 +39,9 @@ function setupParticles(scene) {
   var mps = new MPS(capacity, rate, tex, scene);
 
   mps.gravity = -5;
-  mps.setAlphaRange( 1, 0 );
-  mps.setColorRange( col3.Red(), col3.Green() );
-  mps.setSizeRange( 1, 0.5 );
+  mps.setAlphaRange(1, 0);
+  mps.setColorRange(col3.Red(), col3.Green());
+  mps.setSizeRange(1, 0.5);
   mps.mesh.position.y = 2;
   // or: mps.parent = someOtherMesh
 
@@ -52,11 +52,11 @@ function setupParticles(scene) {
     pdata.velocity.x = Math.random() * 20 - 10;
     pdata.velocity.y = Math.random() * 10 + 5;
     pdata.velocity.z = Math.random() * 20 - 10;
-    pdata.size =       Math.random() * 3 + 3;
+    pdata.size = Math.random() * 3 + 3;
     pdata.age = 0;
-    pdata.lifetime =   Math.random() * 2 + 1;
+    pdata.lifetime = Math.random() * 2 + 1;
   }
-  
+
   mps.start();
   window.mps = mps;
   window.scene = scene
@@ -69,9 +69,9 @@ function setupParticles(scene) {
 
 function setupScenery(scene) {
   // boilerplate
-  scene.clearColor = new BABYLON.Color3( .7, .8, .9)
-  var camera = new BABYLON.ArcRotateCamera('camera', -1, 1.4, 90, new vec3(0,10,0), scene)
-  var light = new BABYLON.HemisphericLight('light', new vec3(0.1,1,0.3), scene )
+  scene.clearColor = new BABYLON.Color3(.7, .8, .9)
+  var camera = new BABYLON.ArcRotateCamera('camera', -1, 1.4, 90, new vec3(0, 10, 0), scene)
+  var light = new BABYLON.HemisphericLight('light', new vec3(0.1, 1, 0.3), scene)
   camera.attachControl(canvas, true)
 
   // grounding scenery
@@ -80,7 +80,7 @@ function setupScenery(scene) {
   ground.material.diffuseColor = new col3(0.7, 0.7, 0.7);
   function makeBox(pos, scale, mat) {
     var box = BABYLON.Mesh.CreateBox("box1", 1, scene);
-    box.position = pos.subtractInPlace( scale.scale(.5) )
+    box.position = pos.subtractInPlace(scale.scale(.5))
     box.scaling = scale
     box.material = mat
   }
@@ -89,11 +89,11 @@ function setupScenery(scene) {
   var windowmat = new BABYLON.StandardMaterial("windowmat", scene);
   windowmat.diffuseColor = new col3(0.2, 0.2, 0.8);
   windowmat.alpha = 0.4;
-  var box1 = makeBox( new vec3( 17,30,-30), new vec3( 2,30,1), wallmat )
-  var box2 = makeBox( new vec3(-15,30,-30), new vec3( 2,30,1), wallmat )
-  var box3 = makeBox( new vec3( 15,30,-30), new vec3(30, 5,1), wallmat )
-  var box4 = makeBox( new vec3( 15, 5,-30), new vec3(30, 5,1), wallmat )
-  var box5 = makeBox( new vec3( 15,25,-30), new vec3(30,20,1), windowmat )
+  var box1 = makeBox(new vec3(17, 30, -30), new vec3(2, 30, 1), wallmat)
+  var box2 = makeBox(new vec3(-15, 30, -30), new vec3(2, 30, 1), wallmat)
+  var box3 = makeBox(new vec3(15, 30, -30), new vec3(30, 5, 1), wallmat)
+  var box4 = makeBox(new vec3(15, 5, -30), new vec3(30, 5, 1), wallmat)
+  var box5 = makeBox(new vec3(15, 25, -30), new vec3(30, 20, 1), windowmat)
 
   return scene
 }

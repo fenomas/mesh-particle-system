@@ -3,19 +3,12 @@
   "version": "0.6.0",
   "description": "Particle system for Babylon.js that composites like a standard mesh",
   "main": "index.js",
-  "directories": {
-    "example": "example"
-  },
   "keywords": [
     "babylon",
     "particles"
   ],
-  "devDependencies": {
-    "beefy": "^2.1.2",
-    "browserify": "^8.1.3"
-  },
   "scripts": {
-    "test": "beefy example/example.js:bundle.js 8080 --cwd example --live --open"
+    "test": "cd docs; webpack-dev-server -d --inline index.js"
   },
   "repository": {
     "type": "git",
