@@ -14,7 +14,7 @@ var rate = 30;           // particles/second
 var mps = new MPS(capacity, rate, tex, scene);
 ```
 
-Live demo [here](http://andyhall.github.io/mesh-particle-system/).
+Live demo [here](https://andyhall.github.io/mesh-particle-system/).
 
 ### Installation
 
