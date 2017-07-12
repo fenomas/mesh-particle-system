@@ -32,11 +32,15 @@ render()
 
 
 function setupParticles(scene) {
-  var tex = new BABYLON.Texture('puff.png', scene, true, false, 1);
 
   var capacity = 2000;
   var rate = 300;           // particles/second
-  var mps = new MPS(capacity, rate, tex, scene);
+  var uRange = [0, 1];
+  var vRange = [0, 1];
+  var mps = new MPS(capacity, rate, scene, uRange, vRange);
+
+  var tex = new BABYLON.Texture('puff.png', scene, true, false, 1);
+  mps.setTexture(tex)
 
   mps.gravity = -5;
   mps.setAlphaRange(1, 0);

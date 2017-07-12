@@ -43,14 +43,14 @@ function initParticle(pdata) {
  *    system ctor
 */
 
-function MeshParticleSystem(capacity, rate, texture, scene) {
+function MeshParticleSystem(capacity, rate, scene, uRange, vRange) {
 
   // public
   this.capacity = capacity;
   this.rate = rate;
-  this.mesh = new BABYLON.Mesh('SPS-mesh', scene);
-  this.material = new BABYLON.StandardMaterial("SPS-mat", scene);
-  this.texture = texture;
+  this.mesh = new BABYLON.Mesh('MPS-mesh', scene);
+  this.material = null;
+  this.texture = null;
   this.gravity = -1;
   this.friction = 1;
   this.fps = 60;
@@ -76,18 +76,28 @@ function MeshParticleSystem(capacity, rate, texture, scene) {
   this._lastPos = vec3.Zero();
   this._startingThisFrame = false;
   this._toEmit = 0;
+  this._createdOwnMaterial = false;
+  uRange = uRange || [+0, +1]
+  vRange = vRange || [+0, +1]
 
   // init mesh and vertex data
   var positions = this._positions;
   var colors = this._colors;
   var indices = [];
   var uvs = [];
+  var baseUVs = [
+    uRange[0], vRange[1],
+    uRange[1], vRange[1],
+    uRange[1], vRange[0],
+    uRange[0], vRange[0]
+  ];
   // quads : 2 triangles per particle
   for (var p = 0; p < capacity; p++) {
     positions.push(0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
     indices.push(p * 4, p * 4 + 1, p * 4 + 2);
     indices.push(p * 4, p * 4 + 2, p * 4 + 3);
-    uvs.push(0, 1, 1, 1, 1, 0, 0, 0);
+    // uvs.push(0, 1, 1, 1, 1, 0, 0, 0);
+    for (var j = 0; j < 8; j++) uvs.push(baseUVs[j])
     colors.push(1, 0, 1, 1, 1, 0, 1, 1, 1, 0, 1, 1, 1, 0, 1, 1);
   }
   var vertexData = new BABYLON.VertexData();
@@ -97,11 +107,6 @@ function MeshParticleSystem(capacity, rate, texture, scene) {
   vertexData.colors = colors;
 
   vertexData.applyToMesh(this.mesh, true);
-
-  // init material
-  this.mesh.material = this.material
-  this.material.specularColor = col3.Black();
-  this.material.checkReadyOnlyOnce = true;
 
   // configurable functions
   this.initParticle = initParticle;
@@ -120,6 +125,9 @@ function MeshParticleSystem(capacity, rate, texture, scene) {
 }
 
 var MPS = MeshParticleSystem;
+
+
+
 
 /*
  *    
@@ -142,6 +150,27 @@ MPS.prototype.stop = function stopMPS() {
   this._scene.unregisterBeforeRender(this.curriedAnimate);
   this._playing = false;
 };
+
+MPS.prototype.setTexture = function setTexture(texture, material) {
+  if (material) {
+    // material is optional - if handed in, store and use
+    if (this.material && this._createdOwnMaterial) {
+      this.material.dispose(false, false);
+    }
+    this.material = material;
+    this._createdOwnMaterial = false;
+  } else if (!this.material) {
+    // no material handed in - create if needed
+    this.material = new BABYLON.StandardMaterial("MPS-mat", this._scene);
+    this.material.specularColor = col3.Black();
+    this.material.checkReadyOnlyOnce = true;
+    this._createdOwnMaterial = true;
+  }
+  // apply texture to material
+  this.mesh.material = this.material;
+  this.texture = texture;
+  updateColorSettings(this);
+}
 
 MPS.prototype.setAlphaRange = function setAlphas(from, to) {
   this._color0.a = from;
@@ -192,24 +221,27 @@ function updateColorSettings(sys) {
   var doAlpha = !(equal(c0.a, 1) && equal(c0.a, c1.a));
   var doColor = !(equal(c0.r, c1.r) && equal(c0.g, c1.g) && equal(c0.b, c1.b));
 
+  sys._updateColors = doAlpha || doColor;
   sys.mesh.hasVertexAlpha = doAlpha;
+
+  if (!sys.material) return
+
   if (doColor || doAlpha) {
     sys.material.ambientTexture = sys.texture;
     sys.material.opacityTexture = sys.texture;
     sys.material.diffuseTexture = null;
-    sys.texture.hasAlpha = false;
-    sys.material.useAlphaFromDiffuseTexture = true;
     sys.material.diffuseColor = col3.White();
+    sys.material.useAlphaFromDiffuseTexture = true;
+    if (sys.texture) sys.texture.hasAlpha = false;
   } else {
     sys.material.diffuseTexture = sys.texture;
     sys.material.ambientTexture = null;
     sys.material.opacityTexture = null;
-    sys.texture.hasAlpha = true;
-    sys.material.useAlphaFromDiffuseTexture = false;
     sys.material.diffuseColor = c0;
+    sys.material.useAlphaFromDiffuseTexture = false;
+    if (sys.texture) sys.texture.hasAlpha = true;
   }
 
-  sys._updateColors = doAlpha || doColor;
 }
 function equal(a, b) {
   return (Math.abs(a - b) < 1e-5)
@@ -283,7 +315,7 @@ function removeParticle(sys, n) {
  *    animate all the particles!
 */
 
-MPS.prototype.animate = function animateSPS(dt) {
+MPS.prototype.animate = function animateMPS(dt) {
   if (dt > 0.1) dt = 0.1;
 
   // adjust particles if mesh has moved
@@ -464,10 +496,12 @@ function updateColorsArray(system) {
 
 function disposeMPS(system) {
   system.stop();
-  system.material.ambientTexture = null;
-  system.material.opacityTexture = null;
-  system.material.diffuseTexture = null;
-  system.material.dispose();
+  if (system._createdOwnMaterial) {
+    system.material.ambientTexture = null;
+    system.material.opacityTexture = null;
+    system.material.diffuseTexture = null;
+    system.material.dispose(false, false);
+  }
   system.material = null;
   system.mesh.geometry.dispose();
   system.mesh.dispose();

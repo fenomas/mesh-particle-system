@@ -11,7 +11,8 @@ var MPS = require('mesh-particle-system');
 var tex = new BABYLON.Texture('particle.png', scene);
 var capacity = 200;
 var rate = 30;           // particles/second
-var mps = new MPS(capacity, rate, tex, scene);
+var mps = new MPS(capacity, rate, scene);
+mps.setTexture(tex);
 ```
 
 Live demo [here](https://andyhall.github.io/mesh-particle-system/).
@@ -22,7 +23,7 @@ Live demo [here](https://andyhall.github.io/mesh-particle-system/).
 npm install mesh-particle-system
 ```
 
-To run demo locally:
+To run demo locally (with `webpack-dev-server`):
 
 ```shell
 cd mesh-particle-system
@@ -33,6 +34,14 @@ npm test
 ### API
 
 ```javascript
+// constructor optionally takes vertex UV ranges for each particle
+var uRange = [0, 1];
+var vRange = [0, 1];
+var mps = new MPS(capacity, rate, scene, uRange, vRange);
+
+// if no material is passed in one will be created (and later disposed) internally
+mps.setTexture(myTexture, myMaterial);
+
 // particle system settings
 mps.gravity = -5; // y direction only for now
 mps.rate = 50; // particles/second
@@ -65,3 +74,10 @@ mps.onDispose; // default null
 mps.stopOnEmpty // default false
 mps.disposeOnEmpty // default false
 ```
+
+### Recent changes
+
+ * 0.7.0
+   * Texture is now set via method rather than being passed in to constructor
+   * Constructor now takes UV ranges, which are baked into particle vertices
+
