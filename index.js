@@ -77,6 +77,7 @@ function MeshParticleSystem(capacity, rate, scene, uRange, vRange) {
   this._startingThisFrame = false;
   this._toEmit = 0;
   this._createdOwnMaterial = false;
+  this._needsColorUpdate = true
   uRange = uRange || [+0, +1]
   vRange = vRange || [+0, +1]
 
@@ -110,9 +111,6 @@ function MeshParticleSystem(capacity, rate, scene, uRange, vRange) {
 
   // configurable functions
   this.initParticle = initParticle;
-
-  // initialize mat/color/alpha settings
-  updateColorSettings(this)
 
   // curried animate function
   var self = this;
@@ -169,13 +167,13 @@ MPS.prototype.setTexture = function setTexture(texture, material) {
   // apply texture to material
   this.mesh.material = this.material;
   this.texture = texture;
-  updateColorSettings(this);
+  this._needsColorUpdate = true;
 }
 
 MPS.prototype.setAlphaRange = function setAlphas(from, to) {
   this._color0.a = from;
   this._color1.a = to;
-  updateColorSettings(this);
+  this._needsColorUpdate = true;
 };
 
 MPS.prototype.setColorRange = function setColors(from, to) {
@@ -185,7 +183,7 @@ MPS.prototype.setColorRange = function setColors(from, to) {
   this._color1.r = to.r;
   this._color1.g = to.g;
   this._color1.b = to.b;
-  updateColorSettings(this);
+  this._needsColorUpdate = true;
 };
 
 MPS.prototype.setSizeRange = function setSizes(from, to) {
@@ -216,6 +214,7 @@ var NUM_PARAMS = 9    // stored floats per particle
 
 // set mesh/mat properties based on color/alpha parameters
 function updateColorSettings(sys) {
+  this._needsColorUpdate = false;
   var c0 = sys._color0;
   var c1 = sys._color1;
   var doAlpha = !(equal(c0.a, 1) && equal(c0.a, c1.a));
@@ -316,6 +315,8 @@ function removeParticle(sys, n) {
 */
 
 MPS.prototype.animate = function animateMPS(dt) {
+  if (this._needsColorUpdate) updateColorSettings(this)
+
   if (dt > 0.1) dt = 0.1;
 
   // adjust particles if mesh has moved

@@ -77,6 +77,8 @@ mps.disposeOnEmpty // default false
 
 ### Recent changes
 
+ * 0.8.0
+   * Performance fix
  * 0.7.0
    * Texture is now set via method rather than being passed in to constructor
    * Constructor now takes UV ranges, which are baked into particle vertices
