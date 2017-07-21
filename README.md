@@ -34,10 +34,11 @@ npm test
 ### API
 
 ```javascript
-// constructor optionally takes vertex UV ranges for each particle
+// constructor optionally takes a starting color and vertex UV ranges for each particle
+var startColor = BABYLON.Color3.White();
 var uRange = [0, 1];
 var vRange = [0, 1];
-var mps = new MPS(capacity, rate, scene, uRange, vRange);
+var mps = new MPS(capacity, rate, scene, startColor, uRange, vRange);
 
 // if no material is passed in one will be created (and later disposed) internally
 mps.setTexture(myTexture, myMaterial);
@@ -69,6 +70,7 @@ mps.initParticle = function myInitParticle(pdata) {
 // other stuff
 mps.start();
 mps.stop();
+mps.emit(20); // particles get emitted the following frame
 mps.dispose();
 mps.onDispose; // default null
 mps.stopOnEmpty // default false
@@ -77,6 +79,8 @@ mps.disposeOnEmpty // default false
 
 ### Recent changes
 
+ * 0.9.0
+   * Adds `startColor` parameter to constructor
  * 0.8.0
    * Performance fix
  * 0.7.0

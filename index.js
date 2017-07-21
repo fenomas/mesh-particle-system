@@ -43,7 +43,15 @@ function initParticle(pdata) {
  *    system ctor
 */
 
-function MeshParticleSystem(capacity, rate, scene, uRange, vRange) {
+function MeshParticleSystem(capacity, rate, scene, startColor, uRange, vRange) {
+
+  // defaults
+  if (!capacity) capacity = 100
+  if (isNaN(rate)) rate = 0
+  if (!scene) throw 'Invalid scene passed to mesh-particle-system'
+  startColor = startColor || { r: +1, g: +1, b: +1, a: +1 }
+  uRange = uRange || [+0, +1]
+  vRange = vRange || [+0, +1]
 
   // public
   this.capacity = capacity;
@@ -63,10 +71,10 @@ function MeshParticleSystem(capacity, rate, scene, uRange, vRange) {
   this._scene = scene;
   this._alive = 0;
   this._data = new Float32Array(capacity * NUM_PARAMS) // pos*3, vel*3, size, age, lifetime
-  this._dummyParticle = new ParticleData()
-  this._color0 = new BABYLON.Color4(1.0, 1.0, 1.0, 1.0)
-  this._color1 = new BABYLON.Color4(1.0, 1.0, 1.0, 1.0)
-  this._updateColors = true;
+  this._dummyParticle = new ParticleData();
+  this._color0 = new BABYLON.Color4(startColor.r, startColor.g, startColor.b, startColor.a);
+  this._color1 = new BABYLON.Color4(startColor.r, startColor.g, startColor.b, startColor.a);
+  this._updateColors = false;
   this._size0 = 1.0;
   this._size1 = 1.0;
   this._positions = [];
@@ -78,8 +86,6 @@ function MeshParticleSystem(capacity, rate, scene, uRange, vRange) {
   this._toEmit = 0;
   this._createdOwnMaterial = false;
   this._needsColorUpdate = true
-  uRange = uRange || [+0, +1]
-  vRange = vRange || [+0, +1]
 
   // init mesh and vertex data
   var positions = this._positions;
@@ -99,7 +105,9 @@ function MeshParticleSystem(capacity, rate, scene, uRange, vRange) {
     indices.push(p * 4, p * 4 + 2, p * 4 + 3);
     // uvs.push(0, 1, 1, 1, 1, 0, 0, 0);
     for (var j = 0; j < 8; j++) uvs.push(baseUVs[j])
-    colors.push(1, 0, 1, 1, 1, 0, 1, 1, 1, 0, 1, 1, 1, 0, 1, 1);
+    for (var k = 0; k < 4; k++) {
+      colors.push(startColor.r, startColor.g, startColor.b, startColor.a)
+    }
   }
   var vertexData = new BABYLON.VertexData();
   vertexData.positions = positions;
@@ -226,9 +234,9 @@ function updateColorSettings(sys) {
   if (!sys.material) return
 
   if (doColor || doAlpha) {
+    sys.material.diffuseTexture = null;
     sys.material.ambientTexture = sys.texture;
     sys.material.opacityTexture = sys.texture;
-    sys.material.diffuseTexture = null;
     sys.material.diffuseColor = col3.White();
     sys.material.useAlphaFromDiffuseTexture = true;
     if (sys.texture) sys.texture.hasAlpha = false;
@@ -236,7 +244,7 @@ function updateColorSettings(sys) {
     sys.material.diffuseTexture = sys.texture;
     sys.material.ambientTexture = null;
     sys.material.opacityTexture = null;
-    sys.material.diffuseColor = c0;
+    sys.material.diffuseColor = new col3(c0.r, c0.g, c0.b);
     sys.material.useAlphaFromDiffuseTexture = false;
     if (sys.texture) sys.texture.hasAlpha = true;
   }

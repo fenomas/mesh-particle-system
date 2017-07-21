@@ -15,6 +15,7 @@ var engine = new BABYLON.Engine(canvas)
 
 var vec3 = BABYLON.Vector3
 var col3 = BABYLON.Color3
+var col4 = BABYLON.Color4
 
 
 var scene = new BABYLON.Scene(engine);
@@ -35,9 +36,10 @@ function setupParticles(scene) {
 
   var capacity = 2000;
   var rate = 300;           // particles/second
+  var startColor = new col4(1, 1, 1, 1)
   var uRange = [0, 1];
   var vRange = [0, 1];
-  var mps = new MPS(capacity, rate, scene, uRange, vRange);
+  var mps = new MPS(capacity, rate, scene, startColor, uRange, vRange);
 
   var tex = new BABYLON.Texture('puff.png', scene, true, false, 1);
   mps.setTexture(tex)
