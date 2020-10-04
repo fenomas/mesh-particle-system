@@ -53,10 +53,12 @@ mps.setAlphaRange( 1, 0 );
 mps.setColorRange( BABYLON.Color3.Red(), BABYLON.Color3.Green() );
 mps.setSizeRange( 1, 0.5 );
 
-// move system around by accessing its mesh
+// set the mesh's initial position by directly accessing it
 mps.mesh.position.y = 2;
-// or define a parent for particles to move with 
-mps.parent = someOtherMesh;
+
+// later on, move the mesh by repositioning it
+// this offsets each particle so they keep a consistent world position
+mps.setMeshPosition(0, 3, 0);
 
 // define a custom particle init function to set 
 mps.initParticle = function myInitParticle(pdata) {
@@ -79,6 +81,10 @@ mps.disposeOnEmpty // default false
 
 ### Recent changes
 
+ * 0.10.0
+   * Adds `setMeshPosition`, removes default behavior of 
+     watching mesh position and rebasing automatically
+   * Removes `parent` parameter and behavior
  * 0.9.0
    * Adds `startColor` parameter to constructor
  * 0.8.0

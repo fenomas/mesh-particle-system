@@ -65,7 +65,6 @@ function MeshParticleSystem(capacity, rate, scene, startColor, uRange, vRange) {
     this.fps = 60
     this.disposeOnEmpty = false
     this.stopOnEmpty = false
-    this.parent = null
     this.onDispose = null
     this.onParticleUpdate = function () { }
 
@@ -201,6 +200,14 @@ MPS.prototype.setSizeRange = function setSizes(from, to) {
     this._size1 = to
 }
 
+MPS.prototype.setMeshPosition = function (x, y, z) {
+    var dx = x - this.mesh.position.x
+    var dy = y - this.mesh.position.y
+    var dz = z - this.mesh.position.z
+    rebaseParticlePositions(this, dx, dy, dz)
+    this.mesh.position.copyFromFloats(x, y, z)
+}
+
 MPS.prototype.emit = function mpsEmit(count) {
     this.start()
     this._toEmit += count
@@ -329,9 +336,6 @@ MPS.prototype.animate = function animateMPS(dt) {
 
     if (dt > 0.1) dt = 0.1
     if (this._needsColorUpdate) updateColorSettings(this)
-
-    // adjust particles if mesh has moved
-    adjustParticlesForMovement(this)
     profile_hook('init')
 
     // add/update/remove particles
@@ -400,20 +404,7 @@ function updateAndRecycle(system, _dt) {
 
 // if mesh system has moved since last frame, adjust particles to compensate
 
-function adjustParticlesForMovement(system) {
-    // relocate to parent if needed
-    if (system.parent) {
-        var p = system.parent.absolutePosition
-        if (system._startingThisFrame) {
-            // bug workaround: on first frame parent may be newly created
-            p = system.parent.getAbsolutePosition()
-            system._startingThisFrame = false
-        }
-        system.mesh.position.copyFrom(p)
-    }
-    var dx = system.mesh.position.x - system._lastPos.x
-    var dy = system.mesh.position.y - system._lastPos.y
-    var dz = system.mesh.position.z - system._lastPos.z
+function rebaseParticlePositions(system, dx, dy, dz) {
     system._lastPos.copyFrom(system.mesh.position)
     if (Math.abs(dx) + Math.abs(dy) + Math.abs(dz) < .001) return
 
@@ -545,7 +536,6 @@ function disposeMPS(system) {
     system._colors.length = 0
     system._positions = null
     system._colors = null
-    system.parent = null
     system._disposed = true
 }
 

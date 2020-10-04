@@ -1,6 +1,6 @@
 {
   "name": "mesh-particle-system",
-  "version": "0.9.0",
+  "version": "0.10.0",
   "description": "Particle system for Babylon.js that composites like a standard mesh",
   "main": "index.js",
   "keywords": [
