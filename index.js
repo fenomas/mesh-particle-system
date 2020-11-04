@@ -424,20 +424,22 @@ function updatePositionsData(system) {
     var cam = system._scene.activeCamera
 
     // prepare transform
-    var mat = BABYLON.Matrix.Identity()
+    var baseMatrix = cachedMatrix1
+    BABYLON.Matrix.IdentityToRef(baseMatrix)
     BABYLON.Matrix.LookAtLHToRef(
         cam.globalPosition,      // eye
         system.mesh.position,    // target
-        vec3.Up(), mat
+        vec3.Up(), baseMatrix
     )
-    mat.m[12] = mat.m[13] = mat.m[14] = 0
-    mat.invert()
+    baseMatrix.m[12] = baseMatrix.m[13] = baseMatrix.m[14] = 0
+
+    var mat = cachedMatrix2
+    baseMatrix.invertToRef(mat)
+
     var m = mat.m
 
     var s0 = system._size0
     var ds = system._size1 - s0
-    var vxSign = [-1, 1, 1, -1]
-    var vySign = [-1, -1, 1, 1]
 
     var idx = 0
     var max = system._alive * NUM_PARAMS
@@ -463,7 +465,10 @@ function updatePositionsData(system) {
     system.mesh.updateVerticesData(BABYLON.VertexBuffer.PositionKind, positions, false, false)
 }
 
-
+var cachedMatrix1 = BABYLON.Matrix.Identity()
+var cachedMatrix2 = BABYLON.Matrix.Identity()
+var vxSign = [-1, 1, 1, -1]
+var vySign = [-1, -1, 1, 1]
 
 
 
